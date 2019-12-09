@@ -37,6 +37,19 @@ points[0].explored=1;
 points[0].x_cordinate=0;
 points[0].y_cordinate=0;
 
+char previous_point='A';
+
+byte adj[len][len];
+
+for(byte i=0;i<len;i++){
+    for(byte j=0;j<len;j++){
+        if (i==j)
+            adj[i][i]=0;
+        else
+            adj[i][j]=32767;
+    }
+}
+
 byte len=1;
 
 Encoder myEnc(5, 6);
@@ -113,10 +126,15 @@ void loop(){
             points[len].type=2;
             points[len].point='A'+len;
             points[len].explored=1;
+            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+            previous_point=points[len].point;
             len++;
         }
         leftTurn();
         dir='L';
+        previous_x=temp_x;
+        previous_y=temp_y;
         encoder_start=myEnc.read();
     }
     else if(IR_LEFT==1 && IR_RIGHT==1 && IR_TOP==0){           //90 deg T
@@ -128,10 +146,15 @@ void loop(){
             points[len].type=1;
             points[len].point='A'+len;
             points[len].explored=1;
+            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+            previous_point=points[len].point;
             len++;
         }
         leftTurn();
         dir='L';
+        previous_x=temp_x;
+        previous_y=temp_y;
         encoder_start=myEnc.read();
     }
     else if(IR_LEFT==1 && IR_RIGHT==0 && IR_TOP==1){           //left and straight
@@ -143,10 +166,15 @@ void loop(){
             points[len].type=1;
             points[len].point='A'+len;
             points[len].explored=1;
+            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+            previous_point=points[len].point;
             len++;
         }
         leftTurn();
         dir='L';
+        previous_x=temp_x;
+        previous_y=temp_y;
         encoder_start=myEnc.read();
     }
     else if(IR_LEFT==1 && IR_RIGHT==0 && IR_TOP==0){           //left only
@@ -158,10 +186,15 @@ void loop(){
             points[len].type=0;
             points[len].point='A'+len;
             points[len].explored=1;
+            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+            previous_point=points[len].point;
             len++;
         }
         leftTurn();
         dir='L';
+        previous_x=temp_x;
+        previous_y=temp_y;
         encoder_start=myEnc.read();
     }
     else if(IR_LEFT==0 && IR_RIGHT==1 && IR_TOP==1){           //right and straight
@@ -173,10 +206,15 @@ void loop(){
             points[len].type=1;
             points[len].point='A'+len;
             points[len].explored=1;
+            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+            previous_point=points[len].point;
             len++;
         }
         straight();
         dir='S';
+        previous_x=temp_x;
+        previous_y=temp_y;
         encoder_start=myEnc.read();
     }
     else if(IR_LEFT==1 && IR_RIGHT==0 && IR_TOP==0){           //right only
@@ -188,8 +226,13 @@ void loop(){
             points[len].type=1;
             points[len].point='A'+len;
             points[len].explored=1;
+            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+            previous_point=points[len].point;
             len++;
         }
+        previous_x=temp_x;
+        previous_y=temp_y;
         rightTurn();
         dir='R';
         encoder_start=myEnc.read();
@@ -203,10 +246,15 @@ void loop(){
             points[len].type=0;
             points[len].point='A'+len;
             points[len].explored=1;
+            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+            previous_point=points[len].point;
             len++;
         }   
         Back();
         dir='B';
+        previous_x=temp_x;
+        previous_y=temp_y;
         encoder_start=myEnc.read();
     }    
 }
@@ -249,6 +297,9 @@ bool check(){
     for(byte i=0;i<len;++i){
         if(points[i].x_cordinate==temp_x && points[i].y_cordinate==temp_y){
             points[i].explored++;
+            adj['A'-previous_point]['A'-points[i].point]=encoder_stop-encoder_start;
+            adj['A'-points[i].point]['A'-previous_point]=encoder_stop-encoder_start;
+            previous_point=points[i].point;
             return 0;
         }
     }
