@@ -96,7 +96,150 @@ void loop(){
     bool IR_TOP = digiatlread(IR_TOP_PIN);
     bool IR_LEFT = digiatlread(IR_LEFT_PIN);
     bool IR_RIGHT = digiatlread(IR_RIGHT_PIN);
-    if(position<6000 && position>1000){
+    
+    if(IR_TOP == 0)
+    {
+         else if(IR_LEFT==1 && IR_RIGHT==0){           //left and straight
+            encoder_stop=myEnc.read();
+            assign_temp_point();
+            if(check()){
+                points[len].x_cordinate=temp_x;
+                points[len].y_cordinate=temp_y;
+                points[len].type=1;
+                points[len].point='A'+len;
+                points[len].explored=1;
+                adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+                adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+                previous_point=points[len].point;
+                len++;
+            }
+            leftTurn();
+            dir='L';
+            previous_x=temp_x;
+            previous_y=temp_y;
+            encoder_start=myEnc.read();
+        }
+
+        else if(IR_LEFT==1 && IR_RIGHT==0){           //left only
+            encoder_stop=myEnc.read();
+            assign_temp_point();
+            if(check()){
+                points[len].x_cordinate=temp_x;
+                points[len].y_cordinate=temp_y;
+                points[len].type=0;
+                points[len].point='A'+len;
+                points[len].explored=1;
+                adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+                adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+                previous_point=points[len].point;
+                len++;
+            }
+            leftTurn();
+            dir='L';
+            previous_x=temp_x;
+            previous_y=temp_y;
+            encoder_start=myEnc.read();
+        }
+
+        else if(IR_LEFT==1 && IR_RIGHT==0){           //right only
+            encoder_stop=myEnc.read();
+            assign_temp_point();
+            if(check()){
+                points[len].x_cordinate=temp_x;
+                points[len].y_cordinate=temp_y;
+                points[len].type=1;
+                points[len].point='A'+len;
+                points[len].explored=1;
+                adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+                adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+                previous_point=points[len].point;
+                len++;
+            }
+            previous_x=temp_x;
+            previous_y=temp_y;
+            rightTurn();
+            dir='R';
+            encoder_start=myEnc.read();
+        }
+
+        else if(IR_LEFT==0 && IR_RIGHT==0){           //180
+            encoder_stop=myEnc.read();
+            assign_temp_point();
+            if(check()){
+                points[len].x_cordinate=temp_x;
+                points[len].y_cordinate=temp_y;
+                points[len].type=0;
+                points[len].point='A'+len;
+                points[len].explored=1;
+                adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+                adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+                previous_point=points[len].point;
+                len++;
+            }   
+            Back();
+            dir='B';
+            previous_x=temp_x;
+            previous_y=temp_y;
+            encoder_start=myEnc.read();
+        } 
+
+        else if(position==6000){
+
+        }
+
+        else if(position==3500 && IR_LEFT==1 && IR_RIGHT==1){     //END - White box
+            //save this point as target in dijkstras.
+        }
+
+    }
+
+    if(IR_TOP == 1)
+    {
+         if(IR_LEFT==1 && IR_RIGHT==1 && IR_TOP==1) {             //90 deg cross
+            encoder_stop=myEnc.read();
+            assign_temp_point();
+            if(check()){
+                points[len].x_cordinate=temp_x;
+                points[len].y_cordinate=temp_y;
+                points[len].type=2;
+                points[len].point='A'+len;
+                points[len].explored=1;
+                adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+                adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+                previous_point=points[len].point;
+                len++;
+            }
+            leftTurn();
+            dir='L';
+            previous_x=temp_x;
+            previous_y=temp_y;
+            encoder_start=myEnc.read();
+        }
+
+        else if(IR_LEFT==0 && IR_RIGHT==1 && IR_TOP==1){           //right and straight
+            encoder_stop=myEnc.read();
+            assign_temp_point();
+            if(check()){
+                points[len].x_cordinate=temp_x;
+                points[len].y_cordinate=temp_y;
+                points[len].type=1;
+                points[len].point='A'+len;
+                points[len].explored=1;
+                adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
+                adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
+                previous_point=points[len].point;
+                len++;
+            }
+            straight();
+            dir='S';
+            previous_x=temp_x;
+            previous_y=temp_y;
+            encoder_start=myEnc.read();
+        }
+
+    }
+
+    else if(position<6000 && position>1000){
         int motorSpeed = Kp * error + Kd * (error - lastError);
         lastError = error;
         int rightMotorSpeed = rightBaseSpeed + motorSpeed;
@@ -116,147 +259,7 @@ void loop(){
             digitalWrite(leftMotor2, LOW);
             analogWrite(leftMotorPWM, leftMotorSpeed);
         }
-    }
-    else if(IR_LEFT==1 && IR_RIGHT==1 && IR_TOP==1) {             //90 deg cross
-        encoder_stop=myEnc.read();
-        assign_temp_point();
-        if(check()){
-            points[len].x_cordinate=temp_x;
-            points[len].y_cordinate=temp_y;
-            points[len].type=2;
-            points[len].point='A'+len;
-            points[len].explored=1;
-            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
-            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
-            previous_point=points[len].point;
-            len++;
-        }
-        leftTurn();
-        dir='L';
-        previous_x=temp_x;
-        previous_y=temp_y;
-        encoder_start=myEnc.read();
-    }
-    else if(IR_LEFT==1 && IR_RIGHT==1 && IR_TOP==0){           //90 deg T
-        encoder_stop=myEnc.read();
-        assign_temp_point();
-        if(check()){
-            points[len].x_cordinate=temp_x;
-            points[len].y_cordinate=temp_y;
-            points[len].type=1;
-            points[len].point='A'+len;
-            points[len].explored=1;
-            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
-            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
-            previous_point=points[len].point;
-            len++;
-        }
-        leftTurn();
-        dir='L';
-        previous_x=temp_x;
-        previous_y=temp_y;
-        encoder_start=myEnc.read();
-    }
-    else if(IR_LEFT==1 && IR_RIGHT==0 && IR_TOP==1){           //left and straight
-        encoder_stop=myEnc.read();
-        assign_temp_point();
-        if(check()){
-            points[len].x_cordinate=temp_x;
-            points[len].y_cordinate=temp_y;
-            points[len].type=1;
-            points[len].point='A'+len;
-            points[len].explored=1;
-            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
-            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
-            previous_point=points[len].point;
-            len++;
-        }
-        leftTurn();
-        dir='L';
-        previous_x=temp_x;
-        previous_y=temp_y;
-        encoder_start=myEnc.read();
-    }
-    else if(IR_LEFT==1 && IR_RIGHT==0 && IR_TOP==0){           //left only
-        encoder_stop=myEnc.read();
-        assign_temp_point();
-        if(check()){
-            points[len].x_cordinate=temp_x;
-            points[len].y_cordinate=temp_y;
-            points[len].type=0;
-            points[len].point='A'+len;
-            points[len].explored=1;
-            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
-            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
-            previous_point=points[len].point;
-            len++;
-        }
-        leftTurn();
-        dir='L';
-        previous_x=temp_x;
-        previous_y=temp_y;
-        encoder_start=myEnc.read();
-    }
-    else if(IR_LEFT==0 && IR_RIGHT==1 && IR_TOP==1){           //right and straight
-        encoder_stop=myEnc.read();
-        assign_temp_point();
-        if(check()){
-            points[len].x_cordinate=temp_x;
-            points[len].y_cordinate=temp_y;
-            points[len].type=1;
-            points[len].point='A'+len;
-            points[len].explored=1;
-            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
-            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
-            previous_point=points[len].point;
-            len++;
-        }
-        straight();
-        dir='S';
-        previous_x=temp_x;
-        previous_y=temp_y;
-        encoder_start=myEnc.read();
-    }
-    else if(IR_LEFT==1 && IR_RIGHT==0 && IR_TOP==0){           //right only
-        encoder_stop=myEnc.read();
-        assign_temp_point();
-        if(check()){
-            points[len].x_cordinate=temp_x;
-            points[len].y_cordinate=temp_y;
-            points[len].type=1;
-            points[len].point='A'+len;
-            points[len].explored=1;
-            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
-            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
-            previous_point=points[len].point;
-            len++;
-        }
-        previous_x=temp_x;
-        previous_y=temp_y;
-        rightTurn();
-        dir='R';
-        encoder_start=myEnc.read();
-    }
-    else if(IR_LEFT==0 && IR_RIGHT==0 && IR_TOP==0){           //180
-        encoder_stop=myEnc.read();
-        assign_temp_point();
-        if(check()){
-            points[len].x_cordinate=temp_x;
-            points[len].y_cordinate=temp_y;
-            points[len].type=0;
-            points[len].point='A'+len;
-            points[len].explored=1;
-            adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
-            adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
-            previous_point=points[len].point;
-            len++;
-        }   
-        Back();
-        dir='B';
-        previous_x=temp_x;
-        previous_y=temp_y;
-        encoder_start=myEnc.read();
-    }    
+    }  
 }
 
 void assign_temp_point(){
