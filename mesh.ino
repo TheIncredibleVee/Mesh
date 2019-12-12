@@ -25,15 +25,15 @@
 
 struct maze{
     char point;
-    byte type;
-    byte explored;
+    bool type;                                      //0 -> no decision node 1-> decision node
+    char dir[4];
+    bool dir_visit[4];
     byte x_cordinate;
     byte y_cordinate;
 }points[15];
 
 points[0].point='A';
-points[0].type=0;
-points[0].explored=1;
+points[0].type=0;                                       
 points[0].x_cordinate=0;
 points[0].y_cordinate=0;
 
@@ -78,13 +78,16 @@ void setup()
   delay(2000); 
 }
 
+byte point_pos=0;
 byte previous_x=0;
 byte previous_y=0;
 byte temp_x=0;
 byte temp_y=0;
 bool angle;             //1 means 90 and 0 means 135
 
-char dir='S';
+char curr_dir='N';
+char last_turn='S';
+char prev_dir='S';
 int encoder_start=myEnc.read();
 int encoder_stop;
 int lastError = 0;
@@ -120,19 +123,56 @@ void loop(){
     else if(IR_LEFT==1 && IR_RIGHT==1 && IR_TOP==1) {             //90 deg cross
         encoder_stop=myEnc.read();
         assign_temp_point();
-        if(check()){
+        point_pos=check();
+        if(point_pos==-1){
             points[len].x_cordinate=temp_x;
             points[len].y_cordinate=temp_y;
-            points[len].type=2;
+            points[len].type=1;
+            points[len].dir[0]=curr_dir;
+            if(curr_dir== 'N'){
+                points[len].dir[1]='E';
+                points[len].dir[2]='S';
+                points[len].dir[3]='W';
+            }
+            if (curr_dir=='S'){
+                points[len].dir[1]='W';
+                points[len].dir[2]='N';
+                points[len].dir[3]='E';
+            }
+            if (curr_dir=='E'){
+                points[len].dir[1]='S';
+                points[len].dir[2]='W';
+                points[len].dir[3]='N';
+            }
+            if(curr_dir=='W'){
+                points[len].dir[1]='N';
+                points[len].dir[2]='E';
+                points[len].dir[3]='S';
+            }
+            points[len].dir_visit[1]=0;
+            points[len].dir_visit[0]=1;
+            points[len].dir_visit[2]=1;
+            points[len].dir_visit[3]=1;
             points[len].point='A'+len;
-            points[len].explored=1;
             adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
             adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
             previous_point=points[len].point;
             len++;
+            leftTurn();
         }
-        leftTurn();
-        dir='L';
+        else if(points[point_pos].dir_visit[2]==1 && points[point_pos].dir[2]!=curr_dir){
+            
+            decision(points[point_pos].dir[2]);
+            points[point_pos].dir_visit[2]=0;
+        }
+        else if(points[point_pos].dir_visit[3]==1 && points[point_pos].dir[3]!=curr_dir){
+            decision(points[point_pos].dir[3]);
+            points[point_pos].dir_visit[3]=0;
+        }
+        else if(points[point_pos].dir_visit[0]==1 && points[point_pos].dir[0]!=curr_dir){
+            decision(points[point_pos].dir[0]);
+            points[point_pos].dir_visit[0]=0;
+        }
         previous_x=temp_x;
         previous_y=temp_y;
         encoder_start=myEnc.read();
@@ -145,7 +185,6 @@ void loop(){
             points[len].y_cordinate=temp_y;
             points[len].type=1;
             points[len].point='A'+len;
-            points[len].explored=1;
             adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
             adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
             previous_point=points[len].point;
@@ -165,7 +204,7 @@ void loop(){
             points[len].y_cordinate=temp_y;
             points[len].type=1;
             points[len].point='A'+len;
-            points[len].explored=1;
+
             adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
             adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
             previous_point=points[len].point;
@@ -185,7 +224,7 @@ void loop(){
             points[len].y_cordinate=temp_y;
             points[len].type=0;
             points[len].point='A'+len;
-            points[len].explored=1;
+
             adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
             adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
             previous_point=points[len].point;
@@ -205,7 +244,7 @@ void loop(){
             points[len].y_cordinate=temp_y;
             points[len].type=1;
             points[len].point='A'+len;
-            points[len].explored=1;
+
             adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
             adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
             previous_point=points[len].point;
@@ -225,7 +264,7 @@ void loop(){
             points[len].y_cordinate=temp_y;
             points[len].type=1;
             points[len].point='A'+len;
-            points[len].explored=1;
+
             adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
             adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
             previous_point=points[len].point;
@@ -245,7 +284,7 @@ void loop(){
             points[len].y_cordinate=temp_y;
             points[len].type=0;
             points[len].point='A'+len;
-            points[len].explored=1;
+
             adj['A'-previous_point]['A'-points[len].point]=encoder_stop-encoder_start;
             adj['A'-points[len].point]['A'-previous_point]=encoder_stop-encoder_start;
             previous_point=points[len].point;
@@ -281,7 +320,7 @@ void assign_temp_point(){
                 temp_y= previous_y;
             }
             else{
-                temp_x= previous_x + 0.707(encoder_stop-encoder_start);
+                temp_x= previous_x + 0.707*(encoder_stop-encoder_start);
                 temp_y= previous_y + 0.707*(encoder_stop-encoder_start);
             }
             break;
@@ -296,14 +335,13 @@ void assign_temp_point(){
 bool check(){
     for(byte i=0;i<len;++i){
         if(points[i].x_cordinate==temp_x && points[i].y_cordinate==temp_y){
-            points[i].explored++;
             adj['A'-previous_point]['A'-points[i].point]=encoder_stop-encoder_start;
             adj['A'-points[i].point]['A'-previous_point]=encoder_stop-encoder_start;
             previous_point=points[i].point;
-            return 0;
+            return i;
         }
     }
-    return 1;
+    return -1;
 }
 
 void wait() {
@@ -311,17 +349,128 @@ void wait() {
 }
 
 void leftTurn(){
-
+    switch(last_turn){
+        case 'R':
+            curr_dir='S';
+            break;
+        case 'L':
+            curr_dir='N';
+            break;
+        case 'S':
+            curr_dir='E';
+            break;
+        case 'B':
+            curr_dir='W';
+            break;
+        }
+    last_turn='L';
 }
 
 void rightTurn(){
+    switch(last_turn){
+        case 'R':
+            curr_dir='N';
+            break;
+        case 'L':
+            curr_dir='S';
+            break;
+        case 'S':
+            curr_dir='W';
+            break;
+        case 'B':
+            curr_dir='E';
+            break;
+    }
 
+    last_turn='R';
 }
 
 void straight(){
-
 }
 
 void back(){
+    switch(curr_dir){
+        case 'N':
+            curr_dir='S';
+            break;
+        case 'S':
+            curr_dir='N';
+            break;
+        case 'E':
+            curr_dir='W';
+            break;
+        case 'W':
+            curr_dir='E';
+            break;
+    }
+    switch (last_turn)
+    {
+    case 'R':
+        last_turn='L';
+        break;
+    case 'L':
+        last_turn='R';
+        break;
+    }
+}
 
+void decision(char x){
+    switch(x){
+        case 'S':
+            switch (curr_dir)
+            {
+                case 'N':
+                    straight();
+                    break;
+                case 'E':
+                    rightTurn();
+                    break;
+                case 'W':
+                    leftTurn();
+                    break;
+            }
+            break;
+        case 'N':
+            switch (curr_dir)
+            {
+                case 'S':
+                    straight();
+                    break;
+                case 'W':
+                    rightTurn();
+                    break;
+                case 'E':
+                    leftTurn();
+                    break;
+            }
+            break;
+        case 'W':
+            switch (curr_dir)
+            {
+                case 'E':
+                    straight();
+                    break;
+                case 'N':
+                    rightTurn();
+                    break;
+                case 'S':
+                    leftTurn();
+                    break;
+            }
+            break;
+        case 'E':
+            switch (curr_dir)
+            {
+                case 'W':
+                    straight();
+                    break;
+                case 'S':
+                    rightTurn();
+                    break;
+                case 'N':
+                    leftTurn();
+                    break;
+            }
+            break;
+    }
 }
